@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  phone-agent:
+    build: .
+    container_name: phone-agent
+    restart: unless-stopped
+
+    # Mount USB for ADB access
+    privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - ./logs:/app/logs
+
+    # Network config
+    ports:
+      - "127.0.0.1:8080:8080" # Localhost only!
+
+    environment:
+      - PHONE_AGENT_LANG=en
+      - PHONE_AGENT_BASE_URL=http://host.docker.internal:8000/v1
+      - PHONE_AGENT_API_KEY=${API_KEY:-}
+
+    # Health check
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  # Optional: Model server (if running locally)
+  # vllm:
+  #   image: vllm/vllm-openai:latest
+  #   runtime: nvidia
+  #   ports:
+  #     - "127.0.0.1:8000:8000"
+  #   volumes:
+  #     - ~/.cache/huggingface:/root/.cache/huggingface
+  #   command: >
+  #     --model zai-org/AutoGLM-Phone-9B
+  #     --port 8000

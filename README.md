@@ -420,12 +420,18 @@ print(f"Result: {result}")
 ```
 Open-AutoGLM/
 ├── main.py                    # CLI entry point
+├── Dockerfile                 # 🆕 Docker container
+├── docker-compose.yml         # 🆕 Docker Compose
 ├── phone_agent/
 │   ├── __init__.py           # Package exports
 │   ├── agent.py              # PhoneAgent class
 │   ├── utils.py              # 🆕 Retry, logging
 │   ├── device_state.py       # 🆕 Device checks
 │   ├── validation.py         # 🆕 Response validation
+│   ├── models.py             # 🆕 Pydantic models
+│   ├── ui_tree.py            # 🆕 UI element detection
+│   ├── api.py                # 🆕 REST API (FastAPI)
+│   ├── web_ui.py             # 🆕 Web Dashboard
 │   ├── adb/
 │   │   ├── connection.py     # USB/WiFi/Remote
 │   │   ├── device.py         # Tap, swipe, etc.
@@ -440,11 +446,150 @@ Open-AutoGLM/
 │       ├── prompts_en.py     # English prompts
 │       ├── prompts_ru.py     # 🆕 Russian prompts
 │       └── i18n.py           # Translations
-├── examples/
-│   └── basic_usage.py        # Usage examples
-├── README.md                 # This file
-└── README_ru.md              # Russian docs
+├── tests/                     # 🆕 Unit tests
+│   └── test_phone_agent.py
+├── .github/workflows/         # 🆕 CI/CD
+│   └── ci.yml
+└── README.md
 ```
+
+---
+
+## 🌐 Web UI & REST API
+
+### Web Dashboard
+
+Launch the web interface to monitor and control the agent:
+
+```bash
+python -m phone_agent.web_ui
+# Open http://localhost:3000/ui
+```
+
+Features:
+- 📱 Live device status (battery, screen, app)
+- 🎯 Execute tasks via natural language
+- 📋 Click on UI elements directly
+- 📝 Action log with timestamps
+
+### REST API
+
+Run the API server for programmatic access:
+
+```bash
+python -m phone_agent.api --host 127.0.0.1 --port 8080 --api-key your-secret-key
+```
+
+**Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API status |
+| GET | `/device` | Device state |
+| GET | `/ui/tree` | UI elements |
+| POST | `/task` | Execute task |
+| POST | `/action` | Execute single action |
+
+**Security features:**
+- 🔒 Localhost-only by default
+- 🔑 API key authentication
+- ⏱️ Rate limiting (60 req/min)
+- 📋 Action whitelist
+
+---
+
+## 🐳 Docker
+
+### Quick Start
+
+```bash
+# Build image
+docker build -t phone-agent .
+
+# Run with USB passthrough (Linux)
+docker run -v /dev/bus/usb:/dev/bus/usb phone-agent
+
+# Or use Docker Compose
+docker-compose up
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PHONE_AGENT_LANG` | `en` | Language (en/ru) |
+| `PHONE_AGENT_BASE_URL` | `http://localhost:8000/v1` | Model API URL |
+| `PHONE_AGENT_API_KEY` | - | Model API key |
+
+---
+
+## 🎯 UI Tree Parsing
+
+Access UI elements programmatically for precise interactions:
+
+```python
+from phone_agent import get_ui_tree, find_element_coordinates
+
+# Get all UI elements
+tree = get_ui_tree()
+
+# Find element by text
+button = tree.find_one(text="Submit", clickable=True)
+if button:
+    print(f"Found at {button.center}")  # (540, 800)
+
+# Find all input fields
+inputs = tree.get_input_fields()
+
+# Find coordinates by text
+coords = find_element_coordinates(text="Login")
+```
+
+---
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+# Install dev dependencies
+pip install pytest pytest-cov
+
+# Run tests
+pytest tests/ -v
+
+# With coverage
+pytest tests/ --cov=phone_agent --cov-report=html
+```
+
+---
+
+## 📦 Pydantic Models
+
+Type-safe configuration with validation:
+
+```python
+from phone_agent import (
+    ModelConfigPydantic,
+    AgentConfigPydantic,
+    ActionRequest,
+    ActionType,
+    Coordinates,
+)
+
+# Validated config (raises on invalid values)
+model_config = ModelConfigPydantic(
+    base_url="http://localhost:8000/v1",
+    temperature=0.1,  # Must be 0.0-2.0
+)
+
+# Validated action
+action = ActionRequest(
+    action=ActionType.TAP,
+    element=Coordinates(x=500, y=300),  # Must be 0-999
+)
+```
+
 
 ---
 
