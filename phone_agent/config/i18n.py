@@ -1,24 +1,24 @@
 """Internationalization (i18n) module for Phone Agent UI messages."""
 
-# Chinese messages
-MESSAGES_ZH = {
-    "thinking": "思考过程",
-    "action": "执行动作",
-    "task_completed": "任务完成",
-    "done": "完成",
-    "starting_task": "开始执行任务",
-    "final_result": "最终结果",
-    "task_result": "任务结果",
-    "confirmation_required": "需要确认",
-    "continue_prompt": "是否继续？(y/n)",
-    "manual_operation_required": "需要人工操作",
-    "manual_operation_hint": "请手动完成操作...",
-    "press_enter_when_done": "完成后按回车继续",
-    "connection_failed": "连接失败",
-    "connection_successful": "连接成功",
-    "step": "步骤",
-    "task": "任务",
-    "result": "结果",
+# Russian messages
+MESSAGES_RU = {
+    "thinking": "Размышление",
+    "action": "Действие",
+    "task_completed": "Задача выполнена",
+    "done": "Готово",
+    "starting_task": "Начинаю выполнение задачи",
+    "final_result": "Итоговый результат",
+    "task_result": "Результат задачи",
+    "confirmation_required": "Требуется подтверждение",
+    "continue_prompt": "Продолжить? (y/n)",
+    "manual_operation_required": "Требуется ручное управление",
+    "manual_operation_hint": "Пожалуйста, выполните операцию вручную...",
+    "press_enter_when_done": "Нажмите Enter после завершения",
+    "connection_failed": "Ошибка подключения",
+    "connection_successful": "Подключение успешно",
+    "step": "Шаг",
+    "task": "Задача",
+    "result": "Результат",
 }
 
 # English messages
@@ -43,28 +43,28 @@ MESSAGES_EN = {
 }
 
 
-def get_messages(lang: str = "cn") -> dict:
+def get_messages(lang: str = "en") -> dict:
     """
     Get UI messages dictionary by language.
 
     Args:
-        lang: Language code, 'cn' for Chinese, 'en' for English.
+        lang: Language code, 'ru' for Russian, 'en' for English.
 
     Returns:
         Dictionary of UI messages.
     """
-    if lang == "en":
-        return MESSAGES_EN
-    return MESSAGES_ZH
+    if lang == "ru":
+        return MESSAGES_RU
+    return MESSAGES_EN
 
 
-def get_message(key: str, lang: str = "cn") -> str:
+def get_message(key: str, lang: str = "en") -> str:
     """
     Get a single UI message by key and language.
 
     Args:
         key: Message key.
-        lang: Language code, 'cn' for Chinese, 'en' for English.
+        lang: Language code, 'ru' for Russian, 'en' for English.
 
     Returns:
         Message string.

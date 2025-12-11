@@ -363,9 +363,9 @@ Examples:
     parser.add_argument(
         "--lang",
         type=str,
-        choices=["cn", "en"],
-        default=os.getenv("PHONE_AGENT_LANG", "cn"),
-        help="Language for system prompt (cn or en, default: cn)",
+        choices=["ru", "en"],
+        default=os.getenv("PHONE_AGENT_LANG", "en"),
+        help="Language for system prompt (ru or en, default: en)",
     )
 
     parser.add_argument(

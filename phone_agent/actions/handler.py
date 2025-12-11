@@ -267,7 +267,7 @@ class ActionHandler:
 
 def parse_action(response: str) -> dict[str, Any]:
     """
-    Parse action from model response.
+    Parse action from model response safely without using eval().
 
     Args:
         response: Raw response string from the model.
@@ -278,21 +278,73 @@ def parse_action(response: str) -> dict[str, Any]:
     Raises:
         ValueError: If the response cannot be parsed.
     """
-    try:
-        # Try to evaluate as Python dict/function call
-        response = response.strip()
-        if response.startswith("do"):
-            action = eval(response)
-        elif response.startswith("finish"):
-            action = {
-                "_metadata": "finish",
-                "message": response.replace("finish(message=", "")[1:-2],
-            }
-        else:
-            raise ValueError(f"Failed to parse action: {response}")
-        return action
-    except Exception as e:
-        raise ValueError(f"Failed to parse action: {e}")
+    import re
+    import json
+    
+    response = response.strip()
+    
+    if response.startswith("finish"):
+        # Parse finish(message="...") or finish(message='...')
+        match = re.search(r'finish\s*\(\s*message\s*=\s*["\'](.+?)["\']\s*\)', response, re.DOTALL)
+        if match:
+            return {"_metadata": "finish", "message": match.group(1)}
+        raise ValueError(f"Failed to parse finish action: {response}")
+    
+    if response.startswith("do"):
+        return _safe_parse_do_action(response)
+    
+    raise ValueError(f"Failed to parse action: {response}")
+
+
+def _safe_parse_do_action(response: str) -> dict[str, Any]:
+    """
+    Safely parse do(...) action without using eval().
+    
+    Args:
+        response: The do(...) string to parse.
+        
+    Returns:
+        Parsed action dictionary.
+        
+    Raises:
+        ValueError: If parsing fails.
+    """
+    import re
+    import json
+    
+    result = {"_metadata": "do"}
+    
+    # Extract content inside do(...)
+    match = re.match(r'do\s*\((.*)\)\s*$', response, re.DOTALL)
+    if not match:
+        raise ValueError(f"Invalid do() format: {response}")
+    
+    content = match.group(1).strip()
+    
+    # Parse key=value pairs using regex
+    # Matches: key="value", key='value', key=[...], key=number
+    pattern = r'(\w+)\s*=\s*(?:"([^"]*?)"|\'([^\']*?)\'|\[([^\]]*)\]|(\d+(?:\.\d+)?))'
+    
+    for m in re.finditer(pattern, content):
+        key = m.group(1)
+        if m.group(2) is not None:  # double-quoted string
+            result[key] = m.group(2)
+        elif m.group(3) is not None:  # single-quoted string
+            result[key] = m.group(3)
+        elif m.group(4) is not None:  # array [...]
+            array_content = m.group(4).strip()
+            if array_content:
+                try:
+                    result[key] = json.loads(f"[{array_content}]")
+                except json.JSONDecodeError:
+                    result[key] = [int(x.strip()) for x in array_content.split(",") if x.strip()]
+            else:
+                result[key] = []
+        elif m.group(5) is not None:  # number
+            num_str = m.group(5)
+            result[key] = float(num_str) if "." in num_str else int(num_str)
+    
+    return result
 
 
 def do(**kwargs) -> dict[str, Any]:

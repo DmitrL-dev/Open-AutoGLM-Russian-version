@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-Phone Agent Usage Examples / Phone Agent 使用示例
+Phone Agent Usage Examples
 
 Demonstrates how to use Phone Agent for phone automation tasks via Python API.
-演示如何通过 Python API 使用 Phone Agent 进行手机自动化任务。
 """
 
 from phone_agent import PhoneAgent
@@ -12,8 +11,8 @@ from phone_agent.config import get_messages
 from phone_agent.model import ModelConfig
 
 
-def example_basic_task(lang: str = "cn"):
-    """Basic task example / 基础任务示例"""
+def example_basic_task(lang: str = "en"):
+    """Basic task example."""
     msgs = get_messages(lang)
 
     # Configure model endpoint
@@ -37,22 +36,22 @@ def example_basic_task(lang: str = "cn"):
     )
 
     # Execute task
-    result = agent.run("打开小红书搜索美食攻略")
+    result = agent.run("Open Chrome and search for weather")
     print(f"{msgs['task_result']}: {result}")
 
 
-def example_with_callbacks(lang: str = "cn"):
-    """Task example with callbacks / 带回调的任务示例"""
+def example_with_callbacks(lang: str = "en"):
+    """Task example with callbacks."""
     msgs = get_messages(lang)
 
     def my_confirmation(message: str) -> bool:
-        """Sensitive operation confirmation callback / 敏感操作确认回调"""
+        """Sensitive operation confirmation callback."""
         print(f"\n[{msgs['confirmation_required']}] {message}")
         response = input(f"{msgs['continue_prompt']}: ")
-        return response.lower() in ("yes", "y", "是")
+        return response.lower() in ("yes", "y")
 
     def my_takeover(message: str) -> None:
-        """Manual takeover callback / 人工接管回调"""
+        """Manual takeover callback."""
         print(f"\n[{msgs['manual_operation_required']}] {message}")
         print(msgs["manual_operation_hint"])
         input(f"{msgs['press_enter_when_done']}: ")
@@ -66,19 +65,19 @@ def example_with_callbacks(lang: str = "cn"):
     )
 
     # Execute task that may require confirmation
-    result = agent.run("打开淘宝搜索无线耳机并加入购物车")
+    result = agent.run("Open Google Play Store and search for Telegram")
     print(f"{msgs['task_result']}: {result}")
 
 
-def example_step_by_step(lang: str = "cn"):
-    """Step-by-step execution example (for debugging) / 单步执行示例（用于调试）"""
+def example_step_by_step(lang: str = "en"):
+    """Step-by-step execution example (for debugging)."""
     msgs = get_messages(lang)
 
     agent_config = AgentConfig(lang=lang)
     agent = PhoneAgent(agent_config=agent_config)
 
     # Initialize task
-    result = agent.step("打开美团搜索附近的火锅店")
+    result = agent.step("Open Settings and check WiFi status")
     print(f"{msgs['step']} 1: {result.action}")
 
     # Continue if not finished
@@ -90,17 +89,17 @@ def example_step_by_step(lang: str = "cn"):
     print(f"\n{msgs['final_result']}: {result.message}")
 
 
-def example_multiple_tasks(lang: str = "cn"):
-    """Batch task example / 批量任务示例"""
+def example_multiple_tasks(lang: str = "en"):
+    """Batch task example."""
     msgs = get_messages(lang)
 
     agent_config = AgentConfig(lang=lang)
     agent = PhoneAgent(agent_config=agent_config)
 
     tasks = [
-        "打开高德地图查看实时路况",
-        "打开大众点评搜索附近的咖啡店",
-        "打开bilibili搜索Python教程",
+        "Open Google Maps and check traffic",
+        "Open Chrome and search for news",
+        "Open Settings and check battery level",
     ]
 
     for task in tasks:
@@ -115,8 +114,8 @@ def example_multiple_tasks(lang: str = "cn"):
         agent.reset()
 
 
-def example_remote_device(lang: str = "cn"):
-    """Remote device example / 远程设备示例"""
+def example_remote_device(lang: str = "en"):
+    """Remote device example."""
     from phone_agent.adb import ADBConnection
 
     msgs = get_messages(lang)
@@ -142,7 +141,7 @@ def example_remote_device(lang: str = "cn"):
     agent = PhoneAgent(agent_config=agent_config)
 
     # Execute task
-    result = agent.run("打开微信查看消息")
+    result = agent.run("Open Telegram and check messages")
     print(f"{msgs['task_result']}: {result}")
 
     # Disconnect
@@ -156,35 +155,33 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lang",
         type=str,
-        default="cn",
-        choices=["cn", "en"],
-        help="Language for UI messages (cn=Chinese, en=English)",
+        default="en",
+        choices=["ru", "en"],
+        help="Language for UI messages (ru=Russian, en=English)",
     )
     args = parser.parse_args()
-
-    msgs = get_messages(args.lang)
 
     print("Phone Agent Usage Examples")
     print("=" * 50)
 
     # Run basic example
-    print(f"\n1. Basic Task Example")
+    print("\n1. Basic Task Example")
     print("-" * 30)
     example_basic_task(args.lang)
 
     # Uncomment to run other examples
-    # print(f"\n2. Task Example with Callbacks")
+    # print("\n2. Task Example with Callbacks")
     # print("-" * 30)
     # example_with_callbacks(args.lang)
 
-    # print(f"\n3. Step-by-step Example")
+    # print("\n3. Step-by-step Example")
     # print("-" * 30)
     # example_step_by_step(args.lang)
 
-    # print(f"\n4. Batch Task Example")
+    # print("\n4. Batch Task Example")
     # print("-" * 30)
     # example_multiple_tasks(args.lang)
 
-    # print(f"\n5. Remote Device Example")
+    # print("\n5. Remote Device Example")
     # print("-" * 30)
     # example_remote_device(args.lang)

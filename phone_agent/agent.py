@@ -9,8 +9,11 @@ from phone_agent.actions import ActionHandler
 from phone_agent.actions.handler import do, finish, parse_action
 from phone_agent.adb import get_current_app, get_screenshot
 from phone_agent.config import get_messages, get_system_prompt
+from phone_agent.device_state import check_device_state, wake_screen
 from phone_agent.model import ModelClient, ModelConfig
 from phone_agent.model.client import MessageBuilder
+from phone_agent.utils import logger
+from phone_agent.validation import validate_action, sanitize_action
 
 
 @dataclass
@@ -19,9 +22,10 @@ class AgentConfig:
 
     max_steps: int = 100
     device_id: str | None = None
-    lang: str = "cn"
+    lang: str = "en"
     system_prompt: str | None = None
     verbose: bool = True
+    check_device_state: bool = True  # Pre-check device before running
 
     def __post_init__(self):
         if self.system_prompt is None:
@@ -91,6 +95,30 @@ class PhoneAgent:
         Returns:
             Final message from the agent.
         """
+        # Pre-check device state if enabled
+        if self.agent_config.check_device_state:
+            state = check_device_state(self.agent_config.device_id)
+
+            if not state.is_connected:
+                logger.error("Device not connected")
+                return "Error: Device not connected"
+
+            if not state.is_ready:
+                issues = state.get_issues()
+                logger.warning(f"Device not ready: {issues}")
+
+                # Try to wake screen if it's off
+                if state.screen_state.value == "off":
+                    logger.info("Attempting to wake screen...")
+                    wake_screen(self.agent_config.device_id)
+
+                # Re-check after wake attempt
+                state = check_device_state(self.agent_config.device_id)
+                if not state.is_ready:
+                    return f"Error: Device not ready - {', '.join(state.get_issues())}"
+
+            logger.info(f"Device ready. Battery: {state.battery_level}%")
+
         self._context = []
         self._step_count = 0
 
